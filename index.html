@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cofre de Senhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#E8F2FF;--card:#fff;--ink:#14213D;--soft:#51607A;--line:#C9D8EE;--coral:#F05D5E;--sun:#FFB800;--mint:#1FA971;--blue:#2F6FDE;--off:#D5DEEC}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1A2F;--card:#172640;--ink:#F1F5FF;--soft:#A8B6D0;--line:#2B3D5E;--off:#2B3D5E}}
+:root[data-theme="dark"]{--bg:#0E1A2F;--card:#172640;--ink:#F1F5FF;--soft:#A8B6D0;--line:#2B3D5E;--off:#2B3D5E}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:18px;line-height:1.45}
+main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:clamp(2rem,8vw,3rem);line-height:1;margin:8px 0 6px;font-weight:800}
+h2{font-size:1.2rem;margin:0 0 8px}
+.lead{color:var(--soft);margin:0 0 14px}
+.warn{background:var(--sun);color:#14213D;border-radius:14px;padding:10px 14px;font-weight:700;margin-bottom:16px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px;margin-bottom:16px}
+label{font-weight:700;display:block;margin-bottom:6px}
+.row{display:flex;gap:8px}
+input{flex:1;min-width:0;font:inherit;font-size:1.3rem;font-weight:700;padding:12px 14px;border-radius:14px;border:3px solid var(--line);background:var(--bg);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+button{font:inherit;font-weight:700;border:0;border-radius:14px;padding:12px 16px;background:var(--blue);color:#fff;cursor:pointer}
+button.alt{background:var(--ink);color:var(--bg)}
+.locks{display:flex;gap:10px;justify-content:center;margin:6px 0 10px}
+.locks svg{width:58px;height:58px}
+.locks .b{fill:var(--off)}.locks .s{stroke:var(--off)}
+.locks .on .b{fill:var(--c)}.locks .on .s{stroke:var(--c)}
+.level{text-align:center;font-size:1.6rem;font-weight:800;margin:0}
+.bit{display:flex;gap:12px;align-items:flex-start;margin-top:10px}
+.bit svg{flex:none;width:56px;height:56px}
+.bubble{background:var(--bg);border:2px solid var(--line);border-radius:6px 18px 18px 18px;padding:10px 14px;flex:1}
+.time{font-size:1.5rem;font-weight:800;margin:0}
+ul{list-style:none;padding:0;margin:0}
+li{padding:4px 0;color:var(--soft)}
+li::before{content:"○ ";font-weight:800}
+li.ok{color:var(--ink)}li.ok::before{content:"✔ ";color:var(--mint)}
+.tip{margin:0;color:var(--soft)}
+.gen{margin-top:10px;font-size:1.2rem;font-weight:800;word-break:break-all}
+footer{text-align:center;color:var(--soft);font-size:.9rem}
+@media (prefers-reduced-motion:no-preference){.locks svg{transition:transform .2s}.locks .on{transform:scale(1.12)}}
+</style>
+</head>
+<body>
+<main>
+<h1>Cofre de Senhas</h1>
+<p class="lead">Invente uma senha e veja quanto tempo o Bit, o robô ladrão, levaria para descobrir.</p>
+<div class="warn">Use só senha inventada. Nunca escreva a sua senha de verdade aqui!</div>
+
+<section class="card" aria-live="polite">
+<label for="pw">Sua senha inventada</label>
+<div class="row"><input id="pw" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="40" placeholder="Digite aqui"><button class="alt" id="clr" type="button">Limpar</button></div>
+<div class="locks" id="locks" aria-hidden="true"></div>
+<p class="level" id="level">Escreva algo!</p>
+<div class="bit">
+<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="16" width="44" height="36" rx="10" fill="#2F6FDE"/><rect x="18" y="24" width="28" height="14" rx="6" fill="#fff"/><circle cx="26" cy="31" r="3.5" fill="#14213D"/><circle cx="38" cy="31" r="3.5" fill="#14213D"/><rect x="24" y="43" width="16" height="3" rx="1.5" fill="#fff"/><rect x="30" y="6" width="4" height="10" fill="#2F6FDE"/><circle cx="32" cy="6" r="4" fill="#FFB800"/></svg>
+<div class="bubble"><p class="tip" id="msg">Oi, eu sou o Bit! Escreva uma senha inventada e eu tento descobrir.</p>
+<p class="time" id="time"></p></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Sua senha tem...</h2>
+<ul id="checks">
+<li data-k="len">12 letras ou mais</li>
+<li data-k="mix">letras maiúsculas e minúsculas</li>
+<li data-k="num">pelo menos um número</li>
+<li data-k="sym">um símbolo (como ! ? #)</li>
+<li data-k="com">nada comum, como 123456 ou senha</li>
+</ul>
+</section>
+
+<section class="card">
+<h2>Precisa de uma ideia?</h2>
+<p class="tip">Frases malucas são fáceis de lembrar e difíceis de adivinhar. Inspire-se e invente a sua!</p>
+<button type="button" id="gen">Gerar ideia</button>
+<div class="gen" id="idea"></div>
+</section>
+
+<section class="card">
+<h2>A receita do super-herói</h2>
+<p class="tip">Frase divertida + número + símbolo. Senha é segredo: só os seus pais podem saber. E use uma senha diferente para cada conta.</p>
+</section>
+<footer>Nada do que você digita sai do seu aparelho. O tempo é uma estimativa, com 1 bilhão de tentativas por segundo.<br>Projeto de extensão: Navegando com Segurança</footer>
+</main>
+<script>
+const COMMON=['123456','12345678','123456789','1234567890','senha','senha123','password','qwerty','abc123','brasil','111111','000000','12345','iloveyou','amor','flamengo','corinthians','roblox','minecraft','freefire','mamae','papai','123123'];
+const LV=[{n:'Fraca',c:'#F05D5E',m:'Moleza! Descobri na hora. Que tal deixar a senha mais longa?'},{n:'Média',c:'#FFB800',m:'Hum, deu trabalho, mas um dia eu consigo. Dá para melhorar!'},{n:'Forte',c:'#1FA971',m:'Eita, essa está difícil! Quase não consigo.'},{n:'Super-herói!',c:'#2F6FDE',m:'Não consigo! Essa senha é de super-herói.'}];
+const $=id=>document.getElementById(id);
+$('locks').innerHTML=[0,1,2,3].map(()=>'<svg viewBox="0 0 48 48"><path class="s" d="M14 22v-6a10 10 0 0 1 20 0v6" fill="none" stroke-width="5" stroke-linecap="round"/><rect class="b" x="8" y="21" width="32" height="22" rx="6"/><circle cx="24" cy="31" r="3" fill="#fff"/></svg>').join('');
+const locks=[...document.querySelectorAll('#locks svg')];
+function seq(s){if(s.length<4)return false;let u=true,d=true;for(let i=1;i<s.length;i++){const x=s.charCodeAt(i)-s.charCodeAt(i-1);if(x!==1)u=false;if(x!==-1)d=false}return u||d}
+function plural(n,a,b){return n+' '+(n===1?a:b)}
+function fmt(s,common){
+ if(common||s<1)return 'menos de 1 segundo';
+ if(s<60)return plural(Math.round(s),'segundo','segundos');
+ if(s<3600)return plural(Math.round(s/60),'minuto','minutos');
+ if(s<86400)return plural(Math.round(s/3600),'hora','horas');
+ const Y=31557600;
+ if(s<Y)return plural(Math.round(s/86400),'dia','dias');
+ const y=s/Y;
+ if(y<1000)return plural(Math.round(y),'ano','anos');
+ if(y<1e6)return 'milhares de anos';
+ if(y<1e9)return 'milhões de anos';
+ if(y<1.4e10)return 'bilhões de anos';
+ return 'mais que a idade do universo';
+}
+function update(){
+ const p=$('pw').value,Y=31557600;
+ const checks=$('checks').children;
+ if(!p){locks.forEach(l=>l.classList.remove('on'));$('level').textContent='Escreva algo!';$('level').style.color='';$('msg').textContent='Oi, eu sou o Bit! Escreva uma senha inventada e eu tento descobrir.';$('time').textContent='';[...checks].forEach(li=>li.classList.remove('ok'));return}
+ const low=p.toLowerCase();
+ const common=COMMON.includes(low)||/^(.)\1+$/.test(p)||seq(low);
+ let size=0;if(/[a-z]/.test(p))size+=26;if(/[A-Z]/.test(p))size+=26;if(/\d/.test(p))size+=10;if(/[^A-Za-z0-9]/.test(p))size+=32;
+ const secs=common?0:Math.pow(size,p.length)/2/1e9;
+ const lv=common||secs<60?0:secs<Y?1:secs<Y*1000?2:3;
+ locks.forEach((l,i)=>{l.classList.toggle('on',i<=lv);l.style.setProperty('--c',LV[lv].c)});
+ $('level').textContent=LV[lv].n;$('level').style.color=LV[lv].c;
+ $('msg').textContent=common?'Essa é uma das senhas mais comuns do mundo. Eu já conhecia!':LV[lv].m;
+ $('time').textContent='Eu levaria: '+fmt(secs,common);
+ const ok={len:p.length>=12,mix:/[a-z]/.test(p)&&/[A-Z]/.test(p),num:/\d/.test(p),sym:/[^A-Za-z0-9]/.test(p),com:!common};
+ [...checks].forEach(li=>li.classList.toggle('ok',ok[li.dataset.k]));
+}
+$('pw').addEventListener('input',update);
+$('clr').onclick=()=>{$('pw').value='';update();$('pw').focus()};
+const A=['Gato','Capivara','Pinguim','Dragao','Tatu','Coruja','Jacare','Panda'],V=['Pula','Come','Danca','Voa','Canta','Surfa','Dorme'],T=['Nuvem','Pizza','Foguete','Banana','Montanha','Sorvete','Planeta'],S='!?#*';
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+$('gen').onclick=()=>{$('idea').textContent=pick(A)+pick(V)+pick(T)+(10+Math.floor(Math.random()*90))+pick([...S])};
+</script>
+</body>
+</html>
